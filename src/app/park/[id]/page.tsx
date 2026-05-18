@@ -3,27 +3,45 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { supabase, Park } from '@/lib/supabase'
+import { supabase, Park, Reflection } from '@/lib/supabase'
 
 export default function ParkPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
 
   const [park, setPark] = useState<Park | null>(null)
-  const [reflection, setReflection] = useState('')
+  const [reflections, setReflections] = useState<Reflection[]>([])
+  const [newReflection, setNewReflection] = useState('')
   const [photos, setPhotos] = useState<string[]>([])
   const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    supabase.from('parks').select('*').eq('id', id).single().then(({ data }) => {
-      if (data) {
-        setPark(data)
-        setReflection(data.reflection ?? '')
+    async function load() {
+      const { data: parkData } = await supabase.from('parks').select('*').eq('id', id).single()
+      if (!parkData) return
+      setPark(parkData)
+
+      const { data: reflData } = await supabase
+        .from('reflections')
+        .select('*')
+        .eq('park_id', id)
+        .order('created_at')
+
+      if (reflData && reflData.length === 0 && parkData.reflection) {
+        // Migrate legacy single reflection into the new table
+        const { data: migrated } = await supabase
+          .from('reflections')
+          .insert({ park_id: id, text: parkData.reflection })
+          .select()
+          .single()
+        if (migrated) setReflections([migrated])
+      } else if (reflData) {
+        setReflections(reflData)
       }
-    })
+    }
+    load()
     loadPhotos()
   }, [id])
 
@@ -48,13 +66,22 @@ export default function ParkPage() {
     setPark(p => p ? { ...p, visited: newVal, visited_at: newVal ? new Date().toISOString() : null } : p)
   }
 
-  async function saveReflection() {
+  async function addReflection() {
+    if (!newReflection.trim()) return
     setSaving(true)
-    await supabase.from('parks').update({ reflection }).eq('id', id)
-    setPark(p => p ? { ...p, reflection } : p)
+    const text = newReflection.trim()
+    const { data } = await supabase
+      .from('reflections')
+      .insert({ park_id: id, text })
+      .select()
+      .single()
+    if (data) {
+      setReflections(prev => [...prev, data])
+      await supabase.from('parks').update({ reflection: text }).eq('id', id)
+      setPark(p => p ? { ...p, reflection: text } : p)
+      setNewReflection('')
+    }
     setSaving(false)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
   }
 
   async function uploadPhoto(e: React.ChangeEvent<HTMLInputElement>) {
@@ -158,23 +185,41 @@ export default function ParkPage() {
           )}
         </div>
 
-        {/* Reflection */}
+        {/* Reflections */}
         <div className="bg-white rounded-2xl shadow-sm p-6">
-          <h2 className="font-semibold text-green-900 mb-3">Reflection</h2>
+          <h2 className="font-semibold text-green-900 mb-4">
+            Reflections {reflections.length > 0 && <span className="text-green-400 font-normal text-sm">({reflections.length})</span>}
+          </h2>
+
+          {reflections.length > 0 && (
+            <div className="space-y-3 mb-5">
+              {reflections.map(r => (
+                <div key={r.id} className="bg-green-50 border border-green-100 rounded-2xl rounded-tl-sm px-4 py-3">
+                  <p className="text-gray-700 text-sm whitespace-pre-wrap">{r.text}</p>
+                  <p className="text-gray-400 text-xs mt-1.5">
+                    {new Date(r.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+
           <textarea
-            value={reflection}
-            onChange={e => setReflection(e.target.value)}
-            placeholder="What did you love about this park? What did you see, smell, hear? How did it make you feel?"
-            rows={6}
+            value={newReflection}
+            onChange={e => setNewReflection(e.target.value)}
+            placeholder={reflections.length === 0
+              ? 'What did you love about this park? What did you see, smell, hear? How did it make you feel?'
+              : 'Add another reflection...'}
+            rows={4}
             className="w-full border border-gray-200 rounded-xl p-3 text-gray-700 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-green-300 resize-none text-sm"
           />
           <div className="flex justify-end mt-3">
             <button
-              onClick={saveReflection}
-              disabled={saving}
+              onClick={addReflection}
+              disabled={saving || !newReflection.trim()}
               className="px-5 py-2 bg-green-600 text-white rounded-full text-sm font-medium hover:bg-green-700 transition-colors disabled:opacity-50"
             >
-              {saved ? '✓ Saved!' : saving ? 'Saving...' : 'Save reflection'}
+              {saving ? 'Saving...' : 'Add reflection'}
             </button>
           </div>
         </div>

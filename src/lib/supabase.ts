@@ -20,3 +20,10 @@ export type ParkPhoto = {
   name: string
   url: string
 }
+
+export type Reflection = {
+  id: string
+  park_id: string
+  text: string
+  created_at: string
+}

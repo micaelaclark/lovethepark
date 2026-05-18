@@ -1,4 +1,13 @@
 -- Run this in your Supabase SQL editor
+-- Migration: run this to add multiple reflections support:
+--   create table reflections (
+--     id uuid primary key default gen_random_uuid(),
+--     park_id uuid references parks(id) on delete cascade,
+--     text text not null,
+--     created_at timestamptz default now()
+--   );
+--   alter table reflections enable row level security;
+--   create policy "Allow all" on reflections for all using (true);
 
 create table parks (
   id uuid primary key default gen_random_uuid(),
