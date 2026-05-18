@@ -4,6 +4,71 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { supabase, Park } from '@/lib/supabase'
 
+function PhotoCarousel({ parks }: { parks: Park[] }) {
+  const photos = parks.filter(p => p.cover_photo_url)
+  const [current, setCurrent] = useState(0)
+
+  useEffect(() => {
+    if (photos.length < 2) return
+    const timer = setInterval(() => {
+      setCurrent(i => (i + 1) % photos.length)
+    }, 4000)
+    return () => clearInterval(timer)
+  }, [photos.length])
+
+  if (photos.length === 0) return null
+
+  const park = photos[current]
+
+  return (
+    <div className="relative w-full rounded-2xl overflow-hidden shadow-md mb-6" style={{ height: '420px' }}>
+      {photos.map((p, i) => (
+        <div
+          key={p.id}
+          className="absolute inset-0 transition-opacity duration-1000"
+          style={{ opacity: i === current ? 1 : 0 }}
+        >
+          <img
+            src={p.cover_photo_url!}
+            alt={p.name}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      ))}
+
+      {/* Gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
+
+      {/* Title */}
+      <div className="absolute top-0 left-0 right-0 p-5">
+        <h1 className="text-white text-3xl font-black tracking-tight drop-shadow-lg">PARK! 2026</h1>
+        <p className="text-white/80 text-sm">Boston · Cambridge · Somerville</p>
+      </div>
+
+      {/* Park name caption */}
+      <div className="absolute bottom-0 left-0 right-0 p-5">
+        <p className="text-white font-semibold text-lg drop-shadow">{park.name}</p>
+        {park.neighborhood && (
+          <p className="text-white/70 text-sm">{park.neighborhood}</p>
+        )}
+      </div>
+
+      {/* Dots */}
+      {photos.length > 1 && (
+        <div className="absolute bottom-4 right-5 flex gap-1.5">
+          {photos.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrent(i)}
+              className={`w-1.5 h-1.5 rounded-full transition-all ${i === current ? 'bg-white w-4' : 'bg-white/50'}`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function Home() {
   const [parks, setParks] = useState<Park[]>([])
   const [loading, setLoading] = useState(true)
@@ -40,10 +105,16 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-green-50">
       <div className="max-w-2xl mx-auto px-4 py-10">
-        <div className="mb-8 text-center">
-          <h1 className="text-4xl font-bold text-green-900 mb-1">PARK! 2026</h1>
-          <p className="text-green-700 text-sm">Boston · Cambridge · Somerville — summer 2026</p>
-        </div>
+
+        <PhotoCarousel parks={parks} />
+
+        {/* Header — only shown when no photos yet */}
+        {parks.filter(p => p.cover_photo_url).length === 0 && (
+          <div className="mb-8 text-center">
+            <h1 className="text-4xl font-bold text-green-900 mb-1">PARK! 2026</h1>
+            <p className="text-green-700 text-sm">Boston · Cambridge · Somerville — summer 2026</p>
+          </div>
+        )}
 
         <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
           <div className="flex justify-between items-baseline mb-2">
