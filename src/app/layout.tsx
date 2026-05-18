@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Love the Park",
-  description: "A personal journal for exploring every park in Boston",
+  title: "PARK! 2026",
+  description: "A personal journal for exploring parks in Boston, Cambridge, and Somerville",
 };
 
 export default function RootLayout({

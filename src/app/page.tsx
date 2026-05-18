@@ -41,8 +41,8 @@ export default function Home() {
     <main className="min-h-screen bg-green-50">
       <div className="max-w-2xl mx-auto px-4 py-10">
         <div className="mb-8 text-center">
-          <h1 className="text-4xl font-bold text-green-900 mb-1">🌳 Love the Park</h1>
-          <p className="text-green-700 text-sm">Boston parks — summer 2026</p>
+          <h1 className="text-4xl font-bold text-green-900 mb-1">PARK! 2026</h1>
+          <p className="text-green-700 text-sm">Boston · Cambridge · Somerville — summer 2026</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
