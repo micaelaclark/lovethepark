@@ -102,26 +102,33 @@ export default function Home() {
             {visitedParks.length > 0 && (
               <div className="mb-6">
                 <h2 className="text-xs font-semibold uppercase tracking-widest text-green-500 mb-3 px-1">Parks you've visited</h2>
-                <div className="space-y-2">
-                  {visitedParks.map(park => (
-                    <Link key={park.id} href={`/park/${park.id}`} className="flex items-center justify-between bg-white rounded-xl px-4 py-3 shadow-sm hover:shadow-md hover:bg-green-50 transition-all group">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <span className="text-xl shrink-0">✅</span>
-                        <div className="min-w-0">
-                          <span className="font-medium block text-green-800">{park.name}</span>
-                          {park.reflection && <span className="text-xs text-gray-400 block truncate max-w-xs">{park.reflection}</span>}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3 shrink-0 ml-3">
-                        {park.cover_photo_url && (
-                          <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 shrink-0">
-                            <img src={park.cover_photo_url} alt="" className="w-full h-full object-cover" />
-                          </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {visitedParks.map((park, i) => {
+                    const isLast = i === visitedParks.length - 1
+                    const isOdd = visitedParks.length % 2 !== 0
+                    const fullWidth = isLast && isOdd
+                    return (
+                      <Link
+                        key={park.id}
+                        href={`/park/${park.id}`}
+                        className={`relative overflow-hidden rounded-xl group ${fullWidth ? 'col-span-2' : ''}`}
+                        style={{ height: fullWidth ? '220px' : '180px' }}
+                      >
+                        {park.cover_photo_url ? (
+                          <img src={park.cover_photo_url} alt={park.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full bg-green-100 flex items-center justify-center text-5xl">🌳</div>
                         )}
-                        <span className="text-green-300 group-hover:text-green-500 transition-colors">→</span>
-                      </div>
-                    </Link>
-                  ))}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                        <div className="absolute bottom-0 left-0 right-0 p-3">
+                          <p className="text-white font-semibold text-sm leading-tight drop-shadow">{park.name}</p>
+                          {park.reflection && (
+                            <p className="text-white/70 text-xs mt-0.5 line-clamp-1">{park.reflection}</p>
+                          )}
+                        </div>
+                      </Link>
+                    )
+                  })}
                 </div>
               </div>
             )}
