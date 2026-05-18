@@ -93,18 +93,29 @@ export default function Home() {
                       href={`/park/${park.id}`}
                       className="flex items-center justify-between bg-white rounded-xl px-4 py-3 shadow-sm hover:shadow-md hover:bg-green-50 transition-all group"
                     >
-                      <div className="flex items-center gap-3">
-                        <span className="text-xl">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="text-xl shrink-0">
                           {park.visited ? '✅' : '⬜'}
                         </span>
-                        <span className={`font-medium ${park.visited ? 'text-green-800' : 'text-gray-700'}`}>
-                          {park.name}
-                        </span>
-                        {park.reflection && (
-                          <span className="text-xs text-green-400">📝</span>
-                        )}
+                        <div className="min-w-0">
+                          <span className={`font-medium block ${park.visited ? 'text-green-800' : 'text-gray-700'}`}>
+                            {park.name}
+                          </span>
+                          {park.reflection && (
+                            <span className="text-xs text-gray-400 block truncate max-w-xs">
+                              {park.reflection}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <span className="text-green-300 group-hover:text-green-500 transition-colors">→</span>
+                      <div className="flex items-center gap-3 shrink-0 ml-3">
+                        {park.cover_photo_url && (
+                          <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 shrink-0">
+                            <img src={park.cover_photo_url} alt="" className="w-full h-full object-cover" />
+                          </div>
+                        )}
+                        <span className="text-green-300 group-hover:text-green-500 transition-colors">→</span>
+                      </div>
                     </Link>
                   ))}
                 </div>

@@ -12,6 +12,7 @@ export type Park = {
   visited: boolean
   visited_at: string | null
   reflection: string | null
+  cover_photo_url: string | null
   created_at: string
 }
 

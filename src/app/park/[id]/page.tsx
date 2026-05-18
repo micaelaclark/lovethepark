@@ -63,6 +63,11 @@ export default function ParkPage() {
     setUploading(true)
     const filename = `${Date.now()}-${file.name}`
     await supabase.storage.from('park-photos').upload(`${id}/${filename}`, file)
+    const { data: { publicUrl } } = supabase.storage.from('park-photos').getPublicUrl(`${id}/${filename}`)
+    if (photos.length === 0) {
+      await supabase.from('parks').update({ cover_photo_url: publicUrl }).eq('id', id)
+      setPark(p => p ? { ...p, cover_photo_url: publicUrl } : p)
+    }
     await loadPhotos()
     setUploading(false)
     if (fileRef.current) fileRef.current.value = ''
@@ -71,7 +76,11 @@ export default function ParkPage() {
   async function deletePhoto(url: string) {
     const path = url.split('/park-photos/')[1]
     await supabase.storage.from('park-photos').remove([path])
-    setPhotos(prev => prev.filter(p => p !== url))
+    const remaining = photos.filter(p => p !== url)
+    setPhotos(remaining)
+    const newCover = remaining[0] ?? null
+    await supabase.from('parks').update({ cover_photo_url: newCover }).eq('id', id)
+    setPark(p => p ? { ...p, cover_photo_url: newCover } : p)
   }
 
   if (!park) {
